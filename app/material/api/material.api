@@ -1,0 +1,167 @@
+syntax = "v1"
+
+info (
+    title:  "Material Service API"
+    desc:   "物料微服务，负责物料主数据(Materials)和物料清单(BOM)的管理"
+    author: "matman"
+    email:  "matman@example.com"
+)
+
+// -------------------
+// 通用类型
+// -------------------
+type (
+    // 通用的成功响应，用于 CUD 操作
+    GeneralSuccessResponse {
+        Success bool `json:"success"`
+    }
+)
+
+// -------------------
+// 物料 (Material) DTOs
+// -------------------
+type (
+    // 物料的核心信息 (用于响应)
+    MaterialInfo {
+        Code          string `json:"code"`                    // 物料编码
+        Name          string `json:"name"`                    // 物料名称
+        MaterialType  string `json:"materialType,optional"`   // 物料类型 (例如: 成品, 半成品, 原料)
+        Spec          string `json:"spec,optional"`           // 规格型号
+        Unit          string `json:"unit,optional"`           // 单位 (例如: 个, kg, 米)
+        Price         int64  `json:"price"`                   // 单价 (单位: 分)
+        StockQuantity int    `json:"stockQuantity"`           // 库存数量
+        SupplierName  string `json:"supplierName,optional"`   // 供应商
+        CreatedAt     string `json:"createdAt"`               // 创建时间
+        UpdatedAt     string `json:"updatedAt"`               // 更新时间
+    }
+
+        // 创建物料请求 (采用严格必填)
+    CreateMaterialRequest {
+        Code          string `json:"code"`                    // 物料编码 (必填)
+        Name          string `json:"name"`                    // 物料名称 (必填)
+        MaterialType  string `json:"materialType"`            // 物料类型 (必填)
+        Spec          string `json:"spec"`                    // 规格型号 (必填)
+        Unit          string `json:"unit"`                    // 单位 (必填)
+        Price         int64  `json:"price"`                   // 单价 (单位: 分) (必填)
+        StockQuantity int    `json:"stockQuantity"`           // 初始库存 (必填, 可以传 0)
+        SupplierName  string `json:"supplierName"`            // 供应商 (必填)
+    }
+
+        // 更新物料请求
+    UpdateMaterialRequest {
+        Code          string `path:"code"`                     // 从 URL 路径获取
+        Name          string `json:"name,optional"`
+        MaterialType  string `json:"materialType,optional"`
+        Spec          string `json:"spec,optional"`
+        Unit          string `json:"unit,optional"`
+        Price         int64  `json:"price,optional"`
+        StockQuantity int    `json:"stockQuantity,optional"`
+        SupplierName  string `json:"supplierName,optional"`
+    }
+
+        // 获取/删除物料请求 (通过 Code)
+    MaterialRequest {
+        Code string `path:"code"` // 从 URL 路径获取
+    }
+
+        // 分页查询物料请求
+    ListMaterialsRequest {
+        Page     int    `json:"page,optional"`     // 页码, 默认 1
+        PageSize int    `json:"pageSize,optional"` // 每页数量, 默认 20
+        Name     string `json:"name,optional"`     // 按物料名称模糊查询
+    }
+
+        // 分页查询物料响应
+    ListMaterialsResponse {
+        Materials []MaterialInfo `json:"materials"`
+        Total     int64          `json:"total"`
+    }
+)
+
+// -------------------
+// 物料清单 (BOM) DTOs
+// -------------------
+type (
+    // BOM 条目信息 (用于响应)
+    BomEntryInfo {
+        ID                 int64   `json:"id"`                 // BOM 条目的唯一ID
+        ParentMaterialCode string  `json:"parentMaterialCode"` // 父物料编码
+        ChildMaterialCode  string  `json:"childMaterialCode"`  // 子物料编码
+        ChildMaterialName  string  `json:"childMaterialName"`  // (冗余) 子物料名称
+        ChildMaterialSpec  string  `json:"childMaterialSpec"`  // (冗余) 子物料规格
+        Quantity           float64 `json:"quantity"`           // 用量 (支持小数)
+        Status             int     `json:"status"`             // 生效状态 (1:生效, 0:失效)
+        CreatedAt          string  `json:"createdAt"`
+        UpdatedAt          string  `json:"updatedAt"`
+    }
+
+        // 获取父物料的BOM清单请求
+    GetBomRequest {
+        ParentCode string `path:"parentCode"` // 父物料的 Code
+    }
+
+        // 获取父物料的BOM清单响应
+    GetBomResponse {
+        Entries []BomEntryInfo `json:"entries"`
+    }
+
+        // 创建或更新BOM条目请求
+    CreateOrUpdateBomEntryRequest {
+        ParentMaterialCode string  `json:"parentMaterialCode"`
+        ChildMaterialCode  string  `json:"childMaterialCode"`
+        Quantity           float64 `json:"quantity"`
+        Status             int     `json:"status,optional"` // 可选, 默认为 1 (生效)
+    }
+
+        // 删除BOM条目请求
+    DeleteBomEntryRequest {
+        ParentCode string `path:"parentCode"`
+        ChildCode  string `path:"childCode"`
+    }
+)
+
+// -------------------
+// 服务路由定义 (合并版)
+// -------------------
+@server (
+    group:      material
+    prefix:     /api/v1/material
+)
+service material {
+
+    // --- 物料 (Material) 路由 ---
+
+    @doc "创建新物料"
+    @handler createMaterial
+    post /materials (CreateMaterialRequest) returns (MaterialInfo)
+
+    @doc "更新物料 (根据 Code)"
+    @handler updateMaterial
+    put /materials/:code (UpdateMaterialRequest) returns (MaterialInfo)
+
+    @doc "删除物料 (根据 Code)"
+    @handler deleteMaterial
+    delete /materials/:code (MaterialRequest) returns (GeneralSuccessResponse)
+
+    @doc "获取物料列表 (分页/查询)"
+    @handler listMaterials
+    get /materials (ListMaterialsRequest) returns (ListMaterialsResponse)
+
+    @doc "获取单个物料详情 (根据 Code)"
+    @handler getMaterial
+    get /materials/:code (MaterialRequest) returns (MaterialInfo)
+
+    // --- 物料清单 (BOM) 路由 ---
+
+    @doc "创建或更新BOM条目 (唯一键: parent/child)"
+    @handler createOrUpdateBomEntry
+    post /bom (CreateOrUpdateBomEntryRequest) returns (BomEntryInfo)
+
+    @doc "删除一个BOM条目"
+    @handler deleteBomEntry
+    delete /bom/:parentCode/:childCode (DeleteBomEntryRequest) returns (GeneralSuccessResponse)
+
+    @doc "获取一个父物料的BOM清单"
+    @handler getBom
+    get /bom/:parentCode (GetBomRequest) returns (GetBomResponse)
+}
