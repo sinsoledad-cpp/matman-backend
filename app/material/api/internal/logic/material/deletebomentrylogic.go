@@ -5,6 +5,9 @@ package material
 
 import (
 	"context"
+	"errors"
+	"matman-backend/app/material/api/internal/logic/errcode"
+	"matman-backend/app/material/domain/repository"
 
 	"matman-backend/app/material/api/internal/svc"
 	"matman-backend/app/material/api/internal/types"
@@ -28,7 +31,15 @@ func NewDeleteBomEntryLogic(ctx context.Context, svcCtx *svc.ServiceContext) *De
 }
 
 func (l *DeleteBomEntryLogic) DeleteBomEntry(req *types.DeleteBomEntryRequest) (resp *types.GeneralSuccessResponse, err error) {
-	// todo: add your logic here and delete this line
+	err = l.svcCtx.BomRepo.Delete(l.ctx, req.ParentCode, req.ChildCode)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			// 未找到，也视为成功 (幂等)
+			return &types.GeneralSuccessResponse{Success: true}, nil
+		}
+		l.Logger.Errorf("BomRepo.Delete error: %v", err)
+		return nil, errcode.ErrInternalError
+	}
 
-	return
+	return &types.GeneralSuccessResponse{Success: true}, nil
 }

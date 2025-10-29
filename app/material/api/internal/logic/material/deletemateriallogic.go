@@ -5,6 +5,9 @@ package material
 
 import (
 	"context"
+	"errors"
+	"matman-backend/app/material/api/internal/logic/errcode"
+	"matman-backend/app/material/domain/repository"
 
 	"matman-backend/app/material/api/internal/svc"
 	"matman-backend/app/material/api/internal/types"
@@ -28,7 +31,27 @@ func NewDeleteMaterialLogic(ctx context.Context, svcCtx *svc.ServiceContext) *De
 }
 
 func (l *DeleteMaterialLogic) DeleteMaterial(req *types.MaterialRequest) (resp *types.GeneralSuccessResponse, err error) {
-	// todo: add your logic here and delete this line
+	// 1. (安全检查) 检查物料是否正在被 BOM 用作"子物料"
+	inUse, err := l.svcCtx.MaterialRepo.IsMaterialInUse(l.ctx, req.Code)
+	if err != nil {
+		l.Logger.Errorf("IsMaterialInUse error: %v", err)
+		return nil, errcode.ErrInternalError
+	}
+	if inUse {
+		// 返回业务错误，阻止删除
+		return nil, errcode.ErrMaterialInUse
+	}
 
-	return
+	// 2. 执行删除
+	err = l.svcCtx.MaterialRepo.DeleteByCode(l.ctx, req.Code)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			// 如果没找到，也算删除成功 (幂等)
+			return &types.GeneralSuccessResponse{Success: true}, nil
+		}
+		l.Logger.Errorf("DeleteByCode error: %v", err)
+		return nil, errcode.ErrInternalError
+	}
+
+	return &types.GeneralSuccessResponse{Success: true}, nil
 }

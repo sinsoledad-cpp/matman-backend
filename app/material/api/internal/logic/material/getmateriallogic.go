@@ -5,6 +5,9 @@ package material
 
 import (
 	"context"
+	"errors"
+	"matman-backend/app/material/api/internal/logic/errcode"
+	"matman-backend/app/material/domain/repository"
 
 	"matman-backend/app/material/api/internal/svc"
 	"matman-backend/app/material/api/internal/types"
@@ -28,7 +31,14 @@ func NewGetMaterialLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetMa
 }
 
 func (l *GetMaterialLogic) GetMaterial(req *types.MaterialRequest) (resp *types.MaterialInfo, err error) {
-	// todo: add your logic here and delete this line
+	mat, err := l.svcCtx.MaterialRepo.FindByCode(l.ctx, req.Code)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, errcode.ErrMaterialNotFound
+		}
+		l.Logger.Errorf("FindByCode error: %v", err)
+		return nil, errcode.ErrInternalError
+	}
 
-	return
+	return l.svcCtx.Converter.ToMaterialInfoResponse(mat), nil
 }
