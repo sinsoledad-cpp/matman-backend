@@ -1,3 +1,6 @@
 Name: material
 Host: 0.0.0.0
-Port: 8888
+Port: 8889
+
+Database:
+  DataSource: "root:root@tcp(localhost:3306)/matman?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai"
