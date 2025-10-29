@@ -1,6 +1,15 @@
 Name: user
 Host: 0.0.0.0
 Port: 8888
+# ⭐ 新增：CORS 跨域配置
+Cors:
+  Origins:
+    - http://localhost:3000
+    # - "https://your-production-domain.com"
+  Methods: [GET, POST, PUT, DELETE, OPTIONS, PATCH]
+  Headers: [Content-Type, Authorization]
+  Credentials: true
+  MaxAge: 3600
 # ⭐ 新增 JWT Auth 配置
 Auth:
   AccessSecret: "a_secret_key_change_it_later" # 替换为你自己的 Secret
