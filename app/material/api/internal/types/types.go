@@ -15,6 +15,18 @@ type BomEntryInfo struct {
 	UpdatedAt          string  `json:"updatedAt"`
 }
 
+type BomListEntry struct {
+	ID                 int64   `json:"id"`                 // BOM 条目的唯一ID
+	ParentMaterialCode string  `json:"parentMaterialCode"` // 父物料编码
+	ParentMaterialName string  `json:"parentMaterialName"` // (冗余) 父物料名称
+	ChildMaterialCode  string  `json:"childMaterialCode"`  // 子物料编码
+	ChildMaterialName  string  `json:"childMaterialName"`  // (冗余) 子物料名称
+	Quantity           float64 `json:"quantity"`           // 用量
+	Status             int     `json:"status"`             // 生效状态 (1:生效, 0:失效)
+	CreatedAt          string  `json:"createdAt"`
+	UpdatedAt          string  `json:"updatedAt"`
+}
+
 type CreateMaterialRequest struct {
 	Code          string `json:"code"`          // 物料编码 (必填)
 	Name          string `json:"name"`          // 物料名称 (必填)
@@ -48,6 +60,18 @@ type GetBomRequest struct {
 
 type GetBomResponse struct {
 	Entries []BomEntryInfo `json:"entries"`
+}
+
+type ListBomsRequest struct {
+	Page       int    `form:"page,optional"`       // 页码, 默认 1
+	PageSize   int    `form:"pageSize,optional"`   // 每页数量, 默认 20
+	ParentName string `form:"parentName,optional"` // (需求) 按父物料名称模糊查询
+	Status     *int   `form:"status,optional"`     // (需求) 按状态筛选 (0:失效, 1:生效)
+}
+
+type ListBomsResponse struct {
+	Entries []BomListEntry `json:"entries"`
+	Total   int64          `json:"total"`
 }
 
 type ListMaterialsRequest struct {

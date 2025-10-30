@@ -78,3 +78,33 @@ func (c *Converter) ToBomEntryInfoList(entities []*entity.BomEntry) []types.BomE
 	}
 	return dtos
 }
+
+// (新增) ToBomListEntry 将 BomListDetails (领域读模型) 转换为 DTO
+func (c *Converter) ToBomListEntry(e *entity.BomListDetails) *types.BomListEntry {
+	if e == nil {
+		return nil
+	}
+	return &types.BomListEntry{
+		ID:                 e.ID,
+		ParentMaterialCode: e.ParentMaterialCode,
+		ParentMaterialName: e.ParentMaterialName,
+		ChildMaterialCode:  e.ChildMaterialCode,
+		ChildMaterialName:  e.ChildMaterialName,
+		Quantity:           e.Quantity,
+		Status:             e.Status,
+		CreatedAt:          e.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:          e.UpdatedAt.Format(time.RFC3339),
+	}
+}
+
+// (新增) ToBomListEntryList (辅助函数) 转换列表
+func (c *Converter) ToBomListEntryList(entities []*entity.BomListDetails) []types.BomListEntry {
+	dtos := make([]types.BomListEntry, len(entities))
+	for i, e := range entities {
+		dto := c.ToBomListEntry(e)
+		if dto != nil {
+			dtos[i] = *dto
+		}
+	}
+	return dtos
+}

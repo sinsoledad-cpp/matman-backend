@@ -1,0 +1,790 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0"
+  },
+  "basePath": "/",
+  "paths": {
+    "/api/v1/material/bom": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建或更新BOM条目 (唯一键: parent/child)",
+        "operationId": "createOrUpdateBomEntry",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "parentMaterialCode",
+                "childMaterialCode",
+                "quantity"
+              ],
+              "properties": {
+                "childMaterialCode": {
+                  "type": "string"
+                },
+                "parentMaterialCode": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "number"
+                },
+                "status": {
+                  "description": "可选, 默认为 1 (生效)",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "childMaterialCode": {
+                  "description": "子物料编码",
+                  "type": "string"
+                },
+                "childMaterialName": {
+                  "description": "(冗余) 子物料名称",
+                  "type": "string"
+                },
+                "childMaterialSpec": {
+                  "description": "(冗余) 子物料规格",
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "id": {
+                  "description": "BOM 条目的唯一ID",
+                  "type": "integer"
+                },
+                "parentMaterialCode": {
+                  "description": "父物料编码",
+                  "type": "string"
+                },
+                "quantity": {
+                  "description": "用量 (支持小数)",
+                  "type": "number"
+                },
+                "status": {
+                  "description": "生效状态 (1:生效, 0:失效)",
+                  "type": "integer"
+                },
+                "updatedAt": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material/bom/{parentCode}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "获取一个父物料的BOM清单",
+        "operationId": "getBom",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "父物料的 Code",
+            "name": "parentCode",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "parentMaterialCode",
+                      "childMaterialCode",
+                      "childMaterialName",
+                      "childMaterialSpec",
+                      "quantity",
+                      "status",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "childMaterialCode": {
+                        "description": "子物料编码",
+                        "type": "string"
+                      },
+                      "childMaterialName": {
+                        "description": "(冗余) 子物料名称",
+                        "type": "string"
+                      },
+                      "childMaterialSpec": {
+                        "description": "(冗余) 子物料规格",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "description": "BOM 条目的唯一ID",
+                        "type": "integer"
+                      },
+                      "parentMaterialCode": {
+                        "description": "父物料编码",
+                        "type": "string"
+                      },
+                      "quantity": {
+                        "description": "用量 (支持小数)",
+                        "type": "number"
+                      },
+                      "status": {
+                        "description": "生效状态 (1:生效, 0:失效)",
+                        "type": "integer"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material/bom/{parentCode}/{childCode}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除一个BOM条目",
+        "operationId": "deleteBomEntry",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "parentCode",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "name": "childCode",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material/boms": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "检索BOM列表 (支持父物料名称、状态分页查询)",
+        "operationId": "listBoms",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "页码, 默认 1",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页数量, 默认 20",
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "(需求) 按父物料名称模糊查询",
+            "name": "parentName",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "(需求) 按状态筛选 (0:失效, 1:生效)",
+            "name": "status",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "parentMaterialCode",
+                      "parentMaterialName",
+                      "childMaterialCode",
+                      "childMaterialName",
+                      "quantity",
+                      "status",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "childMaterialCode": {
+                        "description": "子物料编码",
+                        "type": "string"
+                      },
+                      "childMaterialName": {
+                        "description": "(冗余) 子物料名称",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "description": "BOM 条目的唯一ID",
+                        "type": "integer"
+                      },
+                      "parentMaterialCode": {
+                        "description": "父物料编码",
+                        "type": "string"
+                      },
+                      "parentMaterialName": {
+                        "description": "(冗余) 父物料名称",
+                        "type": "string"
+                      },
+                      "quantity": {
+                        "description": "用量",
+                        "type": "number"
+                      },
+                      "status": {
+                        "description": "生效状态 (1:生效, 0:失效)",
+                        "type": "integer"
+                      },
+                      "updatedAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material/materials": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "获取物料列表 (分页/查询)",
+        "operationId": "listMaterials",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "页码, 默认 1",
+            "name": "page",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "integer",
+            "description": "每页数量, 默认 20",
+            "name": "pageSize",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "按物料名称模糊查询",
+            "name": "name",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "(新增) 按物料类型精确查询",
+            "name": "materialType",
+            "in": "query",
+            "allowEmptyValue": true
+          },
+          {
+            "type": "string",
+            "description": "(新增) 按供应商模糊查询",
+            "name": "supplierName",
+            "in": "query",
+            "allowEmptyValue": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "materials": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "code",
+                      "name",
+                      "price",
+                      "stockQuantity",
+                      "createdAt",
+                      "updatedAt"
+                    ],
+                    "properties": {
+                      "code": {
+                        "description": "物料编码",
+                        "type": "string"
+                      },
+                      "createdAt": {
+                        "description": "创建时间",
+                        "type": "string"
+                      },
+                      "materialType": {
+                        "description": "物料类型 (例如: 成品, 半成品, 原料)",
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "物料名称",
+                        "type": "string"
+                      },
+                      "price": {
+                        "description": "单价 (单位: 分)",
+                        "type": "integer"
+                      },
+                      "spec": {
+                        "description": "规格型号",
+                        "type": "string"
+                      },
+                      "stockQuantity": {
+                        "description": "库存数量",
+                        "type": "integer"
+                      },
+                      "supplierName": {
+                        "description": "供应商",
+                        "type": "string"
+                      },
+                      "unit": {
+                        "description": "单位 (例如: 个, kg, 米)",
+                        "type": "string"
+                      },
+                      "updatedAt": {
+                        "description": "更新时间",
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "total": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "创建新物料",
+        "operationId": "createMaterial",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "code",
+                "name",
+                "materialType",
+                "spec",
+                "unit",
+                "price",
+                "stockQuantity",
+                "supplierName"
+              ],
+              "properties": {
+                "code": {
+                  "description": "物料编码 (必填)",
+                  "type": "string"
+                },
+                "materialType": {
+                  "description": "物料类型 (必填)  (例如: 成品, 半成品, 原料)",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "物料名称 (必填)",
+                  "type": "string"
+                },
+                "price": {
+                  "description": "单价 (单位: 分) (必填)",
+                  "type": "integer"
+                },
+                "spec": {
+                  "description": "规格型号 (必填)",
+                  "type": "string"
+                },
+                "stockQuantity": {
+                  "description": "初始库存 (必填, 可以传 0)",
+                  "type": "integer"
+                },
+                "supplierName": {
+                  "description": "供应商 (必填)",
+                  "type": "string"
+                },
+                "unit": {
+                  "description": "单位 (必填) (例如: 个, kg, 米)",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "description": "物料编码",
+                  "type": "string"
+                },
+                "createdAt": {
+                  "description": "创建时间",
+                  "type": "string"
+                },
+                "materialType": {
+                  "description": "物料类型 (例如: 成品, 半成品, 原料)",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "物料名称",
+                  "type": "string"
+                },
+                "price": {
+                  "description": "单价 (单位: 分)",
+                  "type": "integer"
+                },
+                "spec": {
+                  "description": "规格型号",
+                  "type": "string"
+                },
+                "stockQuantity": {
+                  "description": "库存数量",
+                  "type": "integer"
+                },
+                "supplierName": {
+                  "description": "供应商",
+                  "type": "string"
+                },
+                "unit": {
+                  "description": "单位 (例如: 个, kg, 米)",
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "更新时间",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/material/materials/{code}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "获取单个物料详情 (根据 Code)",
+        "operationId": "getMaterial",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "从 URL 路径获取",
+            "name": "code",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "description": "物料编码",
+                  "type": "string"
+                },
+                "createdAt": {
+                  "description": "创建时间",
+                  "type": "string"
+                },
+                "materialType": {
+                  "description": "物料类型 (例如: 成品, 半成品, 原料)",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "物料名称",
+                  "type": "string"
+                },
+                "price": {
+                  "description": "单价 (单位: 分)",
+                  "type": "integer"
+                },
+                "spec": {
+                  "description": "规格型号",
+                  "type": "string"
+                },
+                "stockQuantity": {
+                  "description": "库存数量",
+                  "type": "integer"
+                },
+                "supplierName": {
+                  "description": "供应商",
+                  "type": "string"
+                },
+                "unit": {
+                  "description": "单位 (例如: 个, kg, 米)",
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "更新时间",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "更新物料 (根据 Code)",
+        "operationId": "updateMaterial",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "从 URL 路径获取",
+            "name": "code",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "materialType": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "integer"
+                },
+                "spec": {
+                  "type": "string"
+                },
+                "stockQuantity": {
+                  "type": "integer"
+                },
+                "supplierName": {
+                  "type": "string"
+                },
+                "unit": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "description": "物料编码",
+                  "type": "string"
+                },
+                "createdAt": {
+                  "description": "创建时间",
+                  "type": "string"
+                },
+                "materialType": {
+                  "description": "物料类型 (例如: 成品, 半成品, 原料)",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "物料名称",
+                  "type": "string"
+                },
+                "price": {
+                  "description": "单价 (单位: 分)",
+                  "type": "integer"
+                },
+                "spec": {
+                  "description": "规格型号",
+                  "type": "string"
+                },
+                "stockQuantity": {
+                  "description": "库存数量",
+                  "type": "integer"
+                },
+                "supplierName": {
+                  "description": "供应商",
+                  "type": "string"
+                },
+                "unit": {
+                  "description": "单位 (例如: 个, kg, 米)",
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "description": "更新时间",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "https"
+        ],
+        "summary": "删除物料 (根据 Code)",
+        "operationId": "deleteMaterial",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "从 URL 路径获取",
+            "name": "code",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-date": "2025-10-30 22:47:50",
+  "x-description": "This is a goctl generated swagger file.",
+  "x-github": "https://github.com/zeromicro/go-zero",
+  "x-go-zero-doc": "https://go-zero.dev/",
+  "x-goctl-version": "1.9.1"
+}

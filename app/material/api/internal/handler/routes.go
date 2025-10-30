@@ -34,6 +34,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: material.DeleteBomEntryHandler(serverCtx),
 			},
 			{
+				// 检索BOM列表 (支持父物料名称、状态分页查询)
+				Method:  http.MethodGet,
+				Path:    "/boms",
+				Handler: material.ListBomsHandler(serverCtx),
+			},
+			{
 				// 创建新物料
 				Method:  http.MethodPost,
 				Path:    "/materials",

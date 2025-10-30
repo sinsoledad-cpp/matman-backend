@@ -49,6 +49,22 @@ func fromBomModel(m *model.Bom) *entity.BomEntry {
 		UpdatedAt:          m.UpdatedAt,
 	}
 }
+func fromBomListDetailsPO(m *model.BomListDetailsPO) *entity.BomListDetails {
+	if m == nil {
+		return nil
+	}
+	return &entity.BomListDetails{
+		ID:                 int64(m.Id),
+		ParentMaterialCode: m.ParentMaterialCode,
+		ParentMaterialName: m.ParentName.String,
+		ChildMaterialCode:  m.ChildMaterialCode,
+		ChildMaterialName:  m.ChildName.String,
+		Quantity:           m.Quantity,
+		Status:             int(m.Status),
+		CreatedAt:          m.CreatedAt,
+		UpdatedAt:          m.UpdatedAt,
+	}
+}
 
 // --- 接口实现 ---
 
@@ -129,4 +145,35 @@ func (r *bomRepoImpl) FindByParentCode(ctx context.Context, parentCode string) (
 		entities[i] = fromBomModel(po)
 	}
 	return entities, nil
+}
+
+// (新增) ListDetails 实现
+func (r *bomRepoImpl) ListDetails(ctx context.Context, page, pageSize int, parentNameFilter string, statusFilter *int) ([]*entity.BomListDetails, int64, error) {
+	// 1. 获取总数
+	total, err := r.bomModel.CountByFilters(ctx, parentNameFilter, statusFilter)
+	if err != nil {
+		logx.WithContext(ctx).Errorf("bomRepoImpl.ListDetails CountByFilters error: %v", err)
+		return nil, 0, err
+	}
+	if total == 0 {
+		return []*entity.BomListDetails{}, 0, nil
+	}
+
+	// 2. 计算 offset
+	offset := (page - 1) * pageSize
+
+	// 3. 查询分页数据
+	pos, err := r.bomModel.FindAllDetailsByFilters(ctx, offset, pageSize, parentNameFilter, statusFilter)
+	if err != nil {
+		logx.WithContext(ctx).Errorf("bomRepoImpl.ListDetails FindAllDetailsByFilters error: %v", err)
+		return nil, 0, err
+	}
+
+	// 4. 转换 PO -> Entity
+	entities := make([]*entity.BomListDetails, len(pos))
+	for i, po := range pos {
+		entities[i] = fromBomListDetailsPO(po)
+	}
+
+	return entities, total, nil
 }

@@ -17,4 +17,6 @@ type BomRepository interface {
 	FindByParentCode(ctx context.Context, parentCode string) ([]*entity.BomEntry, error)
 	// FindEntry (用于内部检查唯一性)
 	FindEntry(ctx context.Context, parentCode, childCode string) (*entity.BomEntry, error)
+
+	ListDetails(ctx context.Context, page, pageSize int, parentNameFilter string, statusFilter *int) ([]*entity.BomListDetails, int64, error)
 }

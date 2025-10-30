@@ -2,7 +2,9 @@ package model
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 )
@@ -17,6 +19,10 @@ type (
 		withSession(session sqlx.Session) BomModel
 		FindAllByParentCode(ctx context.Context, parentCode string) ([]*Bom, error)
 		CheckChildExists(ctx context.Context, childCode string) (bool, error)
+		// (新增) 动态查询BOM总数
+		CountByFilters(ctx context.Context, parentNameFilter string, statusFilter *int) (int64, error)
+		// (新增) 动态查询BOM详情列表
+		FindAllDetailsByFilters(ctx context.Context, offset, limit int, parentNameFilter string, statusFilter *int) ([]*BomListDetailsPO, error)
 	}
 
 	customBomModel struct {
@@ -60,4 +66,80 @@ func (m *customBomModel) CheckChildExists(ctx context.Context, childCode string)
 		return false, err
 	}
 	return exists, nil
+}
+
+type BomListDetailsPO struct {
+	Bom
+	ParentName sql.NullString `db:"parent_name"`
+	ChildName  sql.NullString `db:"child_name"`
+}
+
+// (新增) CountByFilters 动态查询BOM总数
+func (m *customBomModel) CountByFilters(ctx context.Context, parentNameFilter string, statusFilter *int) (int64, error) {
+	var query strings.Builder
+	var args []interface{}
+
+	// b: bom, p_mat: parent material
+	query.WriteString(fmt.Sprintf(
+		"SELECT count(b.id) FROM %s AS b ", m.table,
+	))
+	query.WriteString("LEFT JOIN `materials` AS p_mat ON b.parent_material_code = p_mat.code ")
+	query.WriteString("WHERE 1=1")
+
+	if parentNameFilter != "" {
+		query.WriteString(" AND p_mat.name LIKE ?")
+		args = append(args, "%"+parentNameFilter+"%")
+	}
+	if statusFilter != nil {
+		query.WriteString(" AND b.status = ?")
+		args = append(args, *statusFilter)
+	}
+
+	var count int64
+	err := m.conn.QueryRowCtx(ctx, &count, query.String(), args...)
+	switch err {
+	case nil:
+		return count, nil
+	case sqlx.ErrNotFound:
+		return 0, ErrNotFound
+	default:
+		return 0, err
+	}
+}
+
+// (新增) FindAllDetailsByFilters 动态查询BOM详情列表
+func (m *customBomModel) FindAllDetailsByFilters(ctx context.Context, offset, limit int, parentNameFilter string, statusFilter *int) ([]*BomListDetailsPO, error) {
+	var query strings.Builder
+	var args []interface{}
+
+	// b: bom, p_mat: parent material, c_mat: child material
+	query.WriteString(fmt.Sprintf(
+		"SELECT b.*, p_mat.name as parent_name, c_mat.name as child_name FROM %s AS b ", m.table,
+	))
+	query.WriteString("LEFT JOIN `materials` AS p_mat ON b.parent_material_code = p_mat.code ")
+	query.WriteString("LEFT JOIN `materials` AS c_mat ON b.child_material_code = c_mat.code ")
+	query.WriteString("WHERE 1=1")
+
+	if parentNameFilter != "" {
+		query.WriteString(" AND p_mat.name LIKE ?")
+		args = append(args, "%"+parentNameFilter+"%")
+	}
+	if statusFilter != nil {
+		query.WriteString(" AND b.status = ?")
+		args = append(args, *statusFilter)
+	}
+
+	query.WriteString(" ORDER BY b.id ASC LIMIT ? OFFSET ?")
+	args = append(args, limit, offset)
+
+	var resp []*BomListDetailsPO
+	err := m.conn.QueryRowsCtx(ctx, &resp, query.String(), args...)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlx.ErrNotFound:
+		return []*BomListDetailsPO{}, nil
+	default:
+		return nil, err
+	}
 }
