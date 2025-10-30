@@ -18,9 +18,9 @@ type BomEntryInfo struct {
 type CreateMaterialRequest struct {
 	Code          string `json:"code"`          // 物料编码 (必填)
 	Name          string `json:"name"`          // 物料名称 (必填)
-	MaterialType  string `json:"materialType"`  // 物料类型 (必填)
+	MaterialType  string `json:"materialType"`  // 物料类型 (必填)  (例如: 成品, 半成品, 原料)
 	Spec          string `json:"spec"`          // 规格型号 (必填)
-	Unit          string `json:"unit"`          // 单位 (必填)
+	Unit          string `json:"unit"`          // 单位 (必填) (例如: 个, kg, 米)
 	Price         int64  `json:"price"`         // 单价 (单位: 分) (必填)
 	StockQuantity int    `json:"stockQuantity"` // 初始库存 (必填, 可以传 0)
 	SupplierName  string `json:"supplierName"`  // 供应商 (必填)
@@ -51,9 +51,11 @@ type GetBomResponse struct {
 }
 
 type ListMaterialsRequest struct {
-	Page     int    `json:"page,optional"`     // 页码, 默认 1
-	PageSize int    `json:"pageSize,optional"` // 每页数量, 默认 20
-	Name     string `json:"name,optional"`     // 按物料名称模糊查询
+	Page         int    `form:"page,optional"`         // 页码, 默认 1
+	PageSize     int    `form:"pageSize,optional"`     // 每页数量, 默认 20
+	Name         string `form:"name,optional"`         // 按物料名称模糊查询
+	MaterialType string `form:"materialType,optional"` // (新增) 按物料类型精确查询
+	SupplierName string `form:"supplierName,optional"` // (新增) 按供应商模糊查询
 }
 
 type ListMaterialsResponse struct {

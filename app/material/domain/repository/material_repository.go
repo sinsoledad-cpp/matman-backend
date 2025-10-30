@@ -15,7 +15,7 @@ type MaterialRepository interface {
 	Update(ctx context.Context, mat *entity.Material) error
 	DeleteByCode(ctx context.Context, code string) error
 	FindByCode(ctx context.Context, code string) (*entity.Material, error)
-	List(ctx context.Context, page, pageSize int, name string) ([]*entity.Material, int64, error)
+	List(ctx context.Context, page, pageSize int, name, materialType, supplierName string) ([]*entity.Material, int64, error)
 
 	// (这是一个业务查询，保留在这里是合理的，因为它查询的是 Material 的状态)
 	IsMaterialInUse(ctx context.Context, code string) (bool, error)

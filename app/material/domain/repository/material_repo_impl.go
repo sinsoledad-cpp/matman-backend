@@ -130,10 +130,11 @@ func (r *materialRepoImpl) FindByCode(ctx context.Context, code string) (*entity
 	return fromMaterialModel(po), nil
 }
 
-func (r *materialRepoImpl) List(ctx context.Context, page, pageSize int, name string) ([]*entity.Material, int64, error) {
-	total, err := r.materialsModel.CountAllByName(ctx, name)
+func (r *materialRepoImpl) List(ctx context.Context, page, pageSize int, name, materialType, supplierName string) ([]*entity.Material, int64, error) {
+	// (修改) 1. 调用新的 Count 方法
+	total, err := r.materialsModel.CountByFilters(ctx, name, materialType, supplierName)
 	if err != nil {
-		logx.WithContext(ctx).Errorf("materialRepoImpl.List CountAllByName error: %v", err)
+		logx.WithContext(ctx).Errorf("materialRepoImpl.List CountByFilters error: %v", err)
 		return nil, 0, err
 	}
 	if total == 0 {
@@ -141,12 +142,15 @@ func (r *materialRepoImpl) List(ctx context.Context, page, pageSize int, name st
 	}
 
 	offset := (page - 1) * pageSize
-	pos, err := r.materialsModel.FindAllByName(ctx, offset, pageSize, name)
+
+	// (修改) 2. 调用新的 FindAll 方法
+	pos, err := r.materialsModel.FindAllByFilters(ctx, offset, pageSize, name, materialType, supplierName)
 	if err != nil {
-		logx.WithContext(ctx).Errorf("materialRepoImpl.List FindAllByName error: %v", err)
+		logx.WithContext(ctx).Errorf("materialRepoImpl.List FindAllByFilters error: %v", err)
 		return nil, 0, err
 	}
 
+	// (不变) 3. 转换 PO -> Entity
 	entities := make([]*entity.Material, len(pos))
 	for i, po := range pos {
 		entities[i] = fromMaterialModel(po)

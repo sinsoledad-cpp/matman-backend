@@ -4,8 +4,8 @@
 package types
 
 type ListUsersRequest struct {
-	Page     int `json:"page,optional"`     // 页码, 默认 1
-	PageSize int `json:"pageSize,optional"` // 每页数量, 默认 20
+	Page     int `form:"page,optional"`     // 页码, 默认 1
+	PageSize int `form:"pageSize,optional"` // 每页数量, 默认 20
 }
 
 type ListUsersResponse struct {

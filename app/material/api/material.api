@@ -62,9 +62,11 @@ type (
 	}
 	// 分页查询物料请求
 	ListMaterialsRequest {
-		Page     int    `json:"page,optional"` // 页码, 默认 1
-		PageSize int    `json:"pageSize,optional"` // 每页数量, 默认 20
-		Name     string `json:"name,optional"` // 按物料名称模糊查询
+		Page         int    `form:"page,optional"` // 页码, 默认 1
+		PageSize     int    `form:"pageSize,optional"` // 每页数量, 默认 20
+		Name         string `form:"name,optional"` // 按物料名称模糊查询
+		MaterialType string `form:"materialType,optional"` // (新增) 按物料类型精确查询
+		SupplierName string `form:"supplierName,optional"` // (新增) 按供应商模糊查询
 	}
 	// 分页查询物料响应
 	ListMaterialsResponse {
@@ -109,6 +111,34 @@ type (
 		ParentCode string `path:"parentCode"`
 		ChildCode  string `path:"childCode"`
 	}
+        // (新增) BomListEntry 是用于 ListBoms(/boms) 的响应 DTO
+        // 它包含了父物料和子物料的冗余信息
+    BomListEntry {
+        ID                 int64   `json:"id"`                 // BOM 条目的唯一ID
+        ParentMaterialCode string  `json:"parentMaterialCode"` // 父物料编码
+        ParentMaterialName string  `json:"parentMaterialName"` // (冗余) 父物料名称
+        ChildMaterialCode  string  `json:"childMaterialCode"`  // 子物料编码
+        ChildMaterialName  string  `json:"childMaterialName"`  // (冗余) 子物料名称
+        Quantity           float64 `json:"quantity"`           // 用量
+        Status             int     `json:"status"`             // 生效状态 (1:生效, 0:失效)
+        CreatedAt          string  `json:"createdAt"`
+        UpdatedAt          string  `json:"updatedAt"`
+    }
+        // (保留新功能)
+        // (新增) 检索BOM列表请求 (用于 /boms)
+    ListBomsRequest {
+        Page         int    `form:"page,optional"`       // 页码, 默认 1
+        PageSize     int    `form:"pageSize,optional"`   // 每页数量, 默认 20
+        ParentName   string `form:"parentName,optional"` // (需求) 按父物料名称模糊查询
+        Status       *int   `form:"status,optional"`     // (需求) 按状态筛选 (0:失效, 1:生效)
+    }
+
+        // (保留新功能)
+        // (新增) 检索BOM列表响应
+    ListBomsResponse {
+        Entries []BomListEntry `json:"entries"`
+        Total   int64          `json:"total"`
+    }
 )
 
 // -------------------
@@ -152,5 +182,10 @@ service material {
 	@doc "获取一个父物料的BOM清单"
 	@handler getBom
 	get /bom/:parentCode (GetBomRequest) returns (GetBomResponse)
+
+    // (保留新功能)
+    @doc "检索BOM列表 (支持父物料名称、状态分页查询)"
+    @handler listBoms
+    get /boms (ListBomsRequest) returns (ListBomsResponse)
 }
 

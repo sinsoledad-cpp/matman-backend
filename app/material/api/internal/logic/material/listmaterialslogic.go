@@ -44,7 +44,14 @@ func (l *ListMaterialsLogic) ListMaterials(req *types.ListMaterialsRequest) (res
 
 	// 2. 调用仓储层
 	// (req.Name 用于模糊查询，在 repo impl 中处理)
-	entities, total, err := l.svcCtx.MaterialRepo.List(l.ctx, page, pageSize, req.Name)
+	entities, total, err := l.svcCtx.MaterialRepo.List(
+		l.ctx,
+		page,
+		pageSize,
+		req.Name,
+		req.MaterialType, // (新增)
+		req.SupplierName, // (新增)
+	)
 	if err != nil {
 		l.Logger.Errorf("MaterialRepo.List error: %v", err)
 		return nil, errcode.ErrInternalError
