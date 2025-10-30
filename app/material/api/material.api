@@ -38,9 +38,9 @@ type (
 	CreateMaterialRequest {
 		Code          string `json:"code"` // 物料编码 (必填)
 		Name          string `json:"name"` // 物料名称 (必填)
-		MaterialType  string `json:"materialType"` // 物料类型 (必填)
+		MaterialType  string `json:"materialType"` // 物料类型 (必填)  (例如: 成品, 半成品, 原料)
 		Spec          string `json:"spec"` // 规格型号 (必填)
-		Unit          string `json:"unit"` // 单位 (必填)
+		Unit          string `json:"unit"` // 单位 (必填) (例如: 个, kg, 米)
 		Price         int64  `json:"price"` // 单价 (单位: 分) (必填)
 		StockQuantity int    `json:"stockQuantity"` // 初始库存 (必填, 可以传 0)
 		SupplierName  string `json:"supplierName"` // 供应商 (必填)

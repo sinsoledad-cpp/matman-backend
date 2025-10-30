@@ -1,6 +1,10 @@
 Name: material
 Host: 0.0.0.0
-Port: 8889
+Port: 8888
+Log:
+  Mode: console
+  Level: info
+  Stat: false  # <--- 添加这一行
 # ⭐ 新增：CORS 跨域配置
 Cors:
   Origins:
